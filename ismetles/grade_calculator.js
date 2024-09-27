@@ -2,15 +2,15 @@ let score = 75;
 
 function getLetterGrade(score) {
     if (score >= 90) {
-        return '5';
+        return 'A';
     } else if (score >= 80) {
-        return '4';
+        return 'B';
     } else if (score >= 70) {
-        return '3';
+        return 'C';
     } else if (score >= 60) {
-        return '2';
+        return 'D';
     } else {
-        return '1';
+        return 'F';
     }
 }
 
