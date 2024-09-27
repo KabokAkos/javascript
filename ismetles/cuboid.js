@@ -1,24 +1,26 @@
-function cuboid() {
-    const l = parseFloat(document.getElementById("l").value);
-    const b = parseFloat(document.getElementById("b").value);
-    const h = parseFloat(document.getElementById("h").value);
+let length = 10.4;
+let width = 13.5;
+let height = 8.2;
 
-    if (isNaN(h) || isNaN(l) || isNaN(b)){
-        document.getElementById("output").innerHTML = "The input is not valid!";
+function cuboid() {
+    if (isNaN(height) || isNaN(length) || isNaN(width)){
+       console.log("The input is not valid!");
         return;
     }
 
-    const vol = volume(l, b, h);
-    const surf = surface(l, b, h);
+    let vol = volume(length, width, height);
+    let surf = surface(length, width, height);
 
-    document.getElementById("output").innerHTML = "Surface Area: " + surf + "<br>Volume: " + vol ;
+    console.log("Surface Area: " + surf + "\nVolume: " + vol);
 
 }
 
-function volume(l, b, h){
-    return l*b*h;
+function volume(length, width, height){
+    return length*width*height;
 }
 
-function surface(l, b, h){
-    return (2 * ((l * h) + (l * b) + (h * b)));
+function surface(length, width, height){
+    return (2 * ((length * height) + (length * width) + (height * width)));
 }
+
+cuboid();
