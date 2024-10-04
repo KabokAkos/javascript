@@ -10,7 +10,7 @@ console.log(txt.substring((4, 10)));
 console.log("5. feladat: ")
 console.log(txt.toUpperCase(txt));
 
-console.log("6. feladat: ")
+
 
 let modifiedText = '';
 let ePositions = [];
@@ -21,14 +21,18 @@ for (let i = 0; i < txt.length; i++) {
     if (i % 2 === 1) {
         char = char.toUpperCase();
     }
+    modifiedText += char;
+}
+console.log("6. feladat: ")
+console.log(modifiedText);
+
+for (let i = 0; i < txt.length; i++) {
+    let char = txt[i];
     
     if (char === 'e') {
-        ePositions.push(i); 
-        char = 'E'; 
+        char += 'E';
     }
-    
-    modifiedText += char; 
 }
 
-console.log("Módosított szöveg:", modifiedText);
-console.log("E betűk pozíciói:", ePositions);
+console.log("7. feladat:");
+console.log(ePositions);
