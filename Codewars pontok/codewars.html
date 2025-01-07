@@ -4,8 +4,60 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Codewars User Info</title>
-  <link rel="stylesheet" href="codewars.css">
-  <script src="codewars.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: white;
+      color: black;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    body.dark {
+      background-color: black;
+      color: white;
+    }
+
+    .controls {
+      margin: 20px;
+    }
+
+    input, button {
+      padding: 10px;
+      margin: 5px;
+    }
+
+    .card-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+      justify-content: center;
+      padding: 10px;
+    }
+
+    .card {
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      padding: 20px;
+      width: 250px;
+      text-align: center;
+      background-color: white;
+    }
+
+    body.dark .card {
+      background-color: #333;
+      color: white;
+    }
+
+    @media (max-width: 600px) {
+      .card {
+        width: 200px;
+      }
+    }
+  </style>
 </head>
 <body>
   <div class="controls">
@@ -15,5 +67,97 @@
     <button id="clearDataBtn">Clear Data</button>
   </div>
   <div class="card-container" id="cardContainer"></div>
+
+  <script>
+    const usernameInput = document.getElementById("usernameInput");
+    const addUserBtn = document.getElementById("addUserBtn");
+    const toggleThemeBtn = document.getElementById("toggleThemeBtn");
+    const clearDataBtn = document.getElementById("clearDataBtn");
+    const cardContainer = document.getElementById("cardContainer");
+
+    let users = [];
+
+    document.addEventListener("DOMContentLoaded", () => {
+      const savedTheme = localStorage.getItem("theme") || "light";
+      document.body.classList.add(savedTheme);
+
+      const savedUsers = JSON.parse(localStorage.getItem("users")) || [];
+      if (savedUsers.length > 0) {
+        users = savedUsers;
+        displayUsers();
+      }
+    });
+
+    toggleThemeBtn.addEventListener("click", () => {
+      document.body.classList.toggle("dark");
+      const newTheme = document.body.classList.contains("dark") ? "dark" : "light";
+      localStorage.setItem("theme", newTheme);
+    });
+
+    addUserBtn.addEventListener("click", () => {
+      const username = usernameInput.value.trim();
+      if (!username) {
+        alert("Please enter a username!");
+        return;
+      }
+
+      fetch(`https://www.codewars.com/api/v1/users/${username}`)
+        .then(response => {
+          if (!response.ok) {
+            throw new Error("User not found");
+          }
+          return response.json();
+        })
+        .then(user => {
+          users.push(user);
+          users.sort((a, b) => b.honor - a.honor);
+          localStorage.setItem("users", JSON.stringify(users));
+          displayUsers();
+          usernameInput.value = "";
+        })
+        .catch(error => {
+          alert(error.message);
+        });
+    });
+
+    function displayUsers() {
+      cardContainer.innerHTML = "";
+
+      users.forEach(user => {
+        let languages = "";
+        if (user.ranks && user.ranks.languages) {
+          for (let lang in user.ranks.languages) {
+            if (languages !== "") {
+              languages += ", ";
+            }
+            languages += lang;
+          }
+        }
+
+        let jsRank = "-";
+        if (user.ranks && user.ranks.languages && user.ranks.languages.javascript) {
+          jsRank = user.ranks.languages.javascript.name;
+        }
+
+        const card = document.createElement("div");
+        card.className = "card";
+        card.innerHTML = `
+          <h2>${user.username}</h2>
+          <p><strong>Name:</strong> ${user.name || "-"}</p>
+          <p><strong>Clan:</strong> ${user.clan || "-"}</p>
+          <p><strong>Honor:</strong> ${user.honor}</p>
+          <p><strong>Languages:</strong> ${languages}</p>
+          <p><strong>JavaScript Rank:</strong> ${jsRank}</p>
+        `;
+        cardContainer.appendChild(card);
+      });
+    }
+
+    clearDataBtn.addEventListener("click", () => {
+      users = [];
+      localStorage.removeItem("users");
+      cardContainer.innerHTML = "";
+    });
+  </script>
 </body>
 </html>
