@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <h1>TODO Lista Táblázatban</h1>
+    <table id="todos-table">
+        <tr>
+            <th>ID</th>
+            <th>Cím</th>
+            <th>Elkészült</th>
+        </tr>
+    </table>
+    <button id="load-more">Következő 5</button>
+
+    <script>
+        let currentIndex = 0;
+        const todosPerPage = 5; 
+        let todosData = []; 
+        
+        fetch("https://jsonplaceholder.typicode.com/todos", { 
+            method: "GET" })
+            .then(response => response.json())
+            .then(json => {
+                todosData = json; 
+                renderTodos(); 
+            })
+            .catch(error => {
+                console.error("Hiba történt az adatok lekérdezésekor:", error);
+            });
+
+        function renderTodos() {
+            const table = document.getElementById("todos-table");
+            const nextTodos = todosData.slice(currentIndex, currentIndex + todosPerPage); 
+
+            nextTodos.forEach(todo => {
+                const row = document.createElement("tr");
+                row.innerHTML = `
+                    <td>${todo.id}</td>
+                    <td>${todo.title}</td>
+                    <td>${todo.completed ? "Igen" : "Nem"}</td>
+                `;
+                table.appendChild(row);
+            });
+
+            currentIndex += todosPerPage;
+
+            if (currentIndex >= todosData.length) {
+                document.getElementById("load-more").disabled = true;
+                document.getElementById("load-more").textContent = "Nincs több elem";
+            }
+        }
+
+        document.getElementById("load-more").addEventListener("click", renderTodos);
+        
+    </script>
+</body>
+</html>
