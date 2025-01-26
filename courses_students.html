@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="hu">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Courses and Students</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f4f9;
+            color: #2c2c2c;
+            margin: 0;
+            padding: 0;
+        }
+
+        .card {
+            background: linear-gradient(135deg, #ffffff, #f0f0f0);
+            color: #2c2c2c;
+            padding: 24px;
+            margin: 15px;
+            border-radius: 16px;
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.1);
+            max-width: 400px;
+            width: 100%;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.2);
+        }
+
+        .content {
+            width: 80vw;
+            margin: 25px auto;
+            text-align: center;
+        }
+
+        .card-container {
+            display: flex;
+            flex-direction: row;
+            flex-wrap: wrap;
+            justify-content: space-evenly;
+            align-items: stretch;
+        }
+
+        .menu {
+            margin: 100px auto;
+            width: 80vw;
+            text-align: center;
+        }
+
+        button {
+            background: linear-gradient(90deg, #ff6b6b, #f06595);
+            color: #fff;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: bold;
+            text-transform: capitalize;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        button:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.25);
+        }
+
+        @media screen and (max-width: 768px) {
+            .content {
+                width: 95vw;
+            }
+
+            .card {
+                margin: 10px;
+            }
+        }
+
+        #addCourseBtn, #addStudentBtn {
+            display: none;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="menu">
+        <h1>Courses and Students</h1>
+        <button id="courses">Courses</button>
+        <button id="students">Students</button>
+        <button id="addCourseBtn">Add Course</button>
+        <button id="addStudentBtn">Add Student</button>
+    </div>
+    <div class="content">
+        <div class="card-container"></div>
+    </div>
+    <script>
+        const cardContainer = document.querySelector('.card-container');
+
+        document.getElementById('addCourseBtn').addEventListener('click', function () {
+            createCourse();
+        });
+
+        document.getElementById('addStudentBtn').addEventListener('click', function () {
+            createStudent();
+        });
+
+        document.getElementById('courses').addEventListener('click', function () {
+            document.getElementById('addCourseBtn').style.display = 'inline-block';
+            document.getElementById('addStudentBtn').style.display = 'none';
+            getCourses();
+        });
+
+        document.getElementById('students').addEventListener('click', function () {
+            document.getElementById('addStudentBtn').style.display = 'inline-block';
+            document.getElementById('addCourseBtn').style.display = 'none';
+            getStudents();
+        });
+
+        const API_BASE_URL = "https://vvri.pythonanywhere.com/api/";
+        function getCourses() {
+            let coursesHTML = "";
+            fetch(API_BASE_URL + "courses").then(response => response.json()).then(json => {
+                json.forEach(course => {
+                    coursesHTML += `
+                        <div class="card">
+                            <div class="card-header">
+                                <h3>${course.name}</h3>
+                            </div>
+                            <div class="card-body">
+                                <p class="card-content">Students count: ${course.students.length}</p>
+                            </div>
+                            <div class="card-footer">
+                                <button class="edit" onclick="editCourse(${course.id})">Edit</button>
+                                <button class="delete" onclick="deleteCourse(${course.id})">Delete</button>
+                            </div>
+                        </div>
+                    `
+                });
+                cardContainer.innerHTML = coursesHTML;
+            });
+        }
+
+        function getStudents() {
+            let studentsHTML = "";
+            fetch(API_BASE_URL + "students").then(response => response.json()).then(json => {
+                json.forEach(student => {
+                    studentsHTML += `
+                        <div class="card">
+                            <div class="card-header">
+                                <h3>${student.name}</h3>
+                            </div>
+                            <div class="card-footer">
+                                <button class="edit" onclick="editStudent(${student.id})">Edit</button>
+                                <button class="delete" onclick="deleteStudent(${student.id})">Delete</button>
+                            </div>
+                        </div>
+                    `
+                });
+                cardContainer.innerHTML = studentsHTML;
+            });
+
+        }
+
+        function createStudent() {
+            const name = prompt("Enter the name of the student:");
+            if (name === null || name.trim() === "") {
+                alert("The name is required!");
+                return;
+            }
+
+            const data = {
+                name: name,
+                course_id: 0
+            };
+
+            const options = {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data),
+            };
+            console.log(data);
+            fetch(API_BASE_URL + "students", options)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(result => {
+                    console.log('Success:', result);
+                    getStudents();
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+        }
+
+        function createCourse() {
+            const name = prompt("Enter the course name:");
+            if (name === null || name.trim() === "") {
+                alert("Entering the course name is required!");
+                return;
+            }
+
+            const data = {
+                name: name,
+            };
+
+            const options = {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data),
+            };
+
+            fetch(API_BASE_URL + "courses", options)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(result => {
+                    console.log('Success:', result);
+                    getCourses();
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+        }
+
+        function deleteCourse(id) {
+            fetch(API_BASE_URL + "courses/" + id, { method: 'DELETE' })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response;
+                })
+                .then(result => {
+                    console.log(`Course ${id} deleted:`, result);
+                    getCourses();
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+        }
+
+        function deleteStudent(id) {
+            fetch(API_BASE_URL + "students/" + id, { method: 'DELETE' })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response;
+                })
+                .then(result => {
+                    console.log(`Student ${id} deleted:`, result);
+                    getStudents();
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+        }
+
+        function editCourse(id) {
+            const newName = prompt("Enter new name for the course:");
+            if (newName === null || newName.trim() === "") {
+                alert("The course name is required!");
+                return;
+            }
+
+            const data = {
+                name: newName
+            };
+
+            const options = {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data),
+            };
+
+            fetch(API_BASE_URL + "courses/" + id, options)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(result => {
+                    console.log('Course updated:', result);
+                    getCourses();
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+        }
+
+        function editStudent(id) {
+            const newName = prompt("Enter new name for the student:");
+            if (newName === null || newName.trim() === "") {
+                alert("The student name is required!");
+                return;
+            }
+
+            const data = {
+                name: newName,
+                course_id: 0
+            };
+
+            const options = {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data),
+            };
+
+            fetch(API_BASE_URL + "students/" + id, options)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(result => {
+                    console.log('Student name updated:', result);
+                    getStudents();
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+        }
+
+    </script>
+</body>
+
+</html>
