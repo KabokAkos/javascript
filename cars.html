@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="hu">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Cars</title>
+</head>
+
+<body>
+    <h1>Cars</h1>
+    <button id="cars">Cars</button>
+    <button id="carID">Car By ID</button>
+    <button id="carAdd">Add new car</button>
+    <button id="carDel">Delete car</button>
+    <div class="content">
+        <div class="card-container"></div>
+    </div>
+
+    <script>
+        const cardContainer = document.querySelector('.card-container');
+
+        document.getElementById('cars').addEventListener('click', function () {
+            getCars();
+        });
+
+        document.getElementById('carID').addEventListener('click', function () {
+            getCarById();
+        });
+
+        document.getElementById('carAdd').addEventListener('click', function () {
+            createCar();
+        });
+        document.getElementById('carDel').addEventListener('click', function () {
+            deleteCar();
+        });
+
+        const API_BASE_URL = "https://surveys-5jvt.onrender.com/api/";
+
+        function getCars() {
+            let carsHTML = "";
+            fetch(API_BASE_URL + "cars")
+                .then((response) => response.json())
+                .then((json) => {
+                    json.forEach((car) => {
+                        carsHTML += `
+                    <div class="card">
+                        <div class="card-body">
+                            <p class="card-content">Id: ${car.id}</p>
+                            <p class="card-content">Model: ${car.model}</p>
+                            <p class="card-content">Brand: ${car.brand}</p>
+                            <p class="card-content">Year: ${car.year}</p>
+                        </div>
+                    </div>
+                `;
+                    });
+                    cardContainer.innerHTML = carsHTML;
+                });
+        }
+
+        function getCarById() {
+            const id = prompt("Enter the id of the car:");
+            if (id === null || id.trim() === "") {
+                alert("The id is required!");
+                return;
+            }
+
+            fetch(API_BASE_URL + "cars/" + id)
+                .then((response) => {
+                    if (!response.ok) {
+                        throw new Error("Failed to fetch car data: " + response.status);
+                    }
+                    return response.json();
+                })
+                .then((car) => {
+                    const carHTML = `
+                <div class="card">
+                    <div class="card-body">
+                        <p class="card-content">Id: ${car.id}</p>
+                        <p class="card-content">Model: ${car.model}</p>
+                        <p class="card-content">Brand: ${car.brand}</p>
+                        <p class="card-content">Year: ${car.year}</p>
+                    </div>
+                </div>
+            `;
+                    cardContainer.innerHTML = carHTML;
+                })
+                .catch((error) => {
+                    console.error("Error fetching car data:", error);
+                    cardContainer.innerHTML = `<p>Error fetching car data. Please try again later.</p>`;
+                });
+        }
+
+        function createCar() {
+            const model = prompt("Enter the model of the car:");
+            const brand = prompt("Enter the brand of the car:");
+            const year = prompt("Enter the year of the car:");
+            if (model === null || model.trim() === "") {
+                alert("The model is required!");
+                return;
+            }
+            if (brand === null || brand.trim() === "") {
+                alert("The brand is required!");
+                return;
+            }
+            if (year === null || year.trim() === "") {
+                alert("The year is required!");
+                return;
+            }
+
+            const data = {
+                model: model,
+                brand: brand,
+                year: year
+            };
+
+            const options = {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data),
+            };
+            console.log(data);
+            fetch(API_BASE_URL + "cars", options)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(result => {
+                    console.log('Success:', result);
+                    getCars();
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+        }
+
+        function deleteCar(id) {
+            fetch(API_BASE_URL + "cars/" + id, { method: 'DELETE' })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(result => {
+                    console.log(`Car ${id} deleted:`, result);
+                    getCars();
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+        }
+    </script>
+</body>
+
+</html>
