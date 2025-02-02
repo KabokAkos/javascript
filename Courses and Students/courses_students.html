@@ -81,7 +81,8 @@
             }
         }
 
-        #addCourseBtn, #addStudentBtn {
+        #addCourseBtn,
+        #addStudentBtn {
             display: none;
         }
     </style>
@@ -166,40 +167,62 @@
 
         }
 
-        function createStudent() {
+        async function createStudent() {
             const name = prompt("Enter the name of the student:");
             if (name === null || name.trim() === "") {
                 alert("The name is required!");
                 return;
             }
 
-            const data = {
-                name: name,
-                course_id: 0
-            };
+            try {
+                const coursesResponse = await fetch(API_BASE_URL + "courses");
+                if (!coursesResponse.ok) {
+                    throw new Error(`HTTP error! status: ${coursesResponse.status}`);
+                }
+                const courses = await coursesResponse.json();
 
-            const options = {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(data),
-            };
-            console.log(data);
-            fetch(API_BASE_URL + "students", options)
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! status: ${response.status}`);
-                    }
-                    return response.json();
-                })
-                .then(result => {
-                    console.log('Success:', result);
-                    getStudents();
-                })
-                .catch(error => {
-                    console.error('Error:', error);
+                if (courses.length === 0) {
+                    alert("No available courses!");
+                    return;
+                }
+
+                let courseList = "Select a course:\n";
+                courses.forEach((course, index) => {
+                    courseList += `${index + 1}. ${course.name}\n`;
                 });
+
+                const selectedIndex = prompt(courseList);
+                const selectedCourse = courses[selectedIndex - 1];
+
+                if (!selectedCourse) {
+                    alert("Invalid selection!");
+                    return;
+                }
+
+                const data = {
+                    name: name,
+                    course_id: selectedCourse.id
+                };
+
+                const options = {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data),
+                };
+
+                console.log(data);
+                const response = await fetch(API_BASE_URL + "students", options);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const result = await response.json();
+                console.log('Success:', result);
+                getStudents();
+            } catch (error) {
+                console.error('Error:', error);
+            }
         }
 
         function createCourse() {
@@ -306,7 +329,27 @@
                 });
         }
 
-        function editStudent(id) {
+        async function editStudent(id) {
+            const coursesResponse = await fetch(API_BASE_URL + "courses");
+            if (!coursesResponse.ok) {
+                alert("Error fetching courses");
+                return;
+            }
+            const courses = await coursesResponse.json();
+
+            let courseList = "Select a course:\n";
+            courses.forEach((course, index) => {
+                courseList += `${index + 1}. ${course.name}\n`;
+            });
+
+            const selectedIndex = prompt(courseList);
+            const selectedCourse = courses[selectedIndex - 1];
+
+            if (!selectedCourse) {
+                alert("Invalid selection!");
+                return;
+            }
+
             const newName = prompt("Enter new name for the student:");
             if (newName === null || newName.trim() === "") {
                 alert("The student name is required!");
@@ -315,7 +358,7 @@
 
             const data = {
                 name: newName,
-                course_id: 0
+                course_id: selectedCourse.id
             };
 
             const options = {
@@ -326,20 +369,17 @@
                 body: JSON.stringify(data),
             };
 
-            fetch(API_BASE_URL + "students/" + id, options)
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! status: ${response.status}`);
-                    }
-                    return response.json();
-                })
-                .then(result => {
-                    console.log('Student name updated:', result);
-                    getStudents();
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                });
+            try {
+                const response = await fetch(API_BASE_URL + "students/" + id, options);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const result = await response.json();
+                console.log('Student updated:', result);
+                getStudents();
+            } catch (error) {
+                console.error('Error:', error);
+            }
         }
     </script>
 </body>
